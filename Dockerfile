@@ -7,8 +7,5 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get insta
 # Install scripts
 COPY sync.sh entrypoint.sh /usr/local/bin/
 
-VOLUME /root/.ssh
-VOLUME /sync-dir
-
 # Run the command on container startup
 ENTRYPOINT ["entrypoint.sh"]

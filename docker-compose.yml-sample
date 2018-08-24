@@ -1,0 +1,19 @@
+version: '3.5'
+
+services:
+
+  git-sync-<repo name>:
+    restart: unless-stopped
+    container_name: git-<repo name>
+    image: hugoseabra19/docker-git-sync
+    volumes:
+      - ./ssh:/root/.ssh
+      - ./repos:/sync-dir
+    environment:
+      - GIT_REPO_DOMAIN=
+      - GIT_REPO_URL=
+      - GIT_REPO_DIR_NAME=<repo name>
+      - GIT_REPO_BRANCH=
+      - GIT_USER_EMAIL=
+      - GIT_USER_NAME=
+      - OVERWRITE_LOCAL=false

@@ -2,7 +2,7 @@
 
 source /etc/sync_env
 
-SYNC_DIR="/sync-dir"
+SYNC_DIR="/sync-dir/${GIT_REPO_DIR_NAME}"
 
 function die {
     echo >&2 "$@"
@@ -11,13 +11,22 @@ function die {
 
 echo "Starting sync at $(date -R)"
 
+KNOWN_HOSTS_FILE_PATH="/root/.ssh/known_hosts"
+if [ ! -n "$(grep "^${GIT_REPO_DOMAIN} " ${KNOWN_HOSTS_FILE_PATH})" ]; then
+  echo "registering known host for ${GIT_REPO_DOMAIN} ..."
+   ssh-keyscan ${GIT_REPO_DOMAIN} >> ${KNOWN_HOSTS_FILE_PATH} 2>/dev/null;
+fi
+
 if [ ! -d "$SYNC_DIR" ]; then
   echo "${SYNC_DIR} does not exist or is not a directory. Performing initial clone."
   git clone "${GIT_REPO_URL}" --branch "${GIT_REPO_BRANCH}" --single-branch "${SYNC_DIR}" || die "git clone failed"
-elif [ ! -d "$SYNC_DIR/.git" ]; then
-  echo "${SYNC_DIR} exists but does not contain a git repository. Initializing local git repository before pulling remote"
-  cd "${SYNC_DIR}"
+fi
 
+cd ${SYNC_DIR}
+
+if [ ! -d ".git" ]; then
+  echo "${SYNC_DIR} exists but does not contain a git repository. Initializing local git repository before pulling remote"
+  
   if [ "${OVERWRITE_LOCAL}" = "true"  ]; then
     echo "Removing all existing files in that directory beforehand as requested using --overwrite-local."
     find -delete
@@ -32,8 +41,6 @@ elif [ ! -d "$SYNC_DIR/.git" ]; then
   git fetch origin "${GIT_REPO_BRANCH}" || die "git fetch failed"
   git checkout -t "origin/${GIT_REPO_BRANCH}" || die "git checkout failed"
 fi
-
-cd "${SYNC_DIR}"
 
 git pull origin "${GIT_REPO_BRANCH}" || die "git pull failed"
 
@@ -58,3 +65,4 @@ if [ -n "${CHANGES_TO_PUSH}" ]; then
 else
   echo "No changes to push"
 fi
+echo ;

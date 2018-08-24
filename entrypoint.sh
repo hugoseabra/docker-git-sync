@@ -8,6 +8,12 @@ function die {
 }
 
 # Check mandatory environment variables
+if [ -z "${GIT_REPO_DOMAIN}" ]; then
+  die "GIT_REPO_DOMAIN must be specified!"
+fi
+if [ -z "${GIT_REPO_DIR_NAME}" ]; then
+  die "GIT_REPO_DIR_NAME must be specified!"
+fi
 if [ -z "${GIT_USER_NAME}" ]; then
   die "GIT_USER_NAME must be specified!"
 fi
@@ -22,6 +28,8 @@ fi
 chmod 0700 /root/.ssh
 chmod 0600 /root/.ssh/id_rsa
 chmod 0644 /root/.ssh/id_rsa.pub
+
+touch /root/.ssh/known_hosts
 chmod 0644 /root/.ssh/known_hosts
 
 # branch default
@@ -34,14 +42,17 @@ git config --global user.email "${GIT_USER_EMAIL}"
 # Use default push behavior of Git 2.0
 git config --global push.default simple
 
+echo "GIT_REPO_DOMAIN=${GIT_REPO_DOMAIN}" >> /etc/sync_env
+echo "GIT_REPO_DIR_NAME=${GIT_REPO_DIR_NAME}" >> /etc/sync_env
 echo "GIT_USER_NAME=${GIT_USER_NAME}" >> /etc/sync_env
 echo "GIT_USER_EMAIL=${GIT_USER_EMAIL}" >> /etc/sync_env
 echo "GIT_REPO_URL=${GIT_REPO_URL}" >> /etc/sync_env
 echo "GIT_REPO_BRANCH=${GIT_REPO_BRANCH}" >> /etc/sync_env
 
+
 # CRON_TIME can be set via environment
 # If not defined, the default is every minute
-CRON_TIME=${CRON_TIME:-*/1 * * * *}
+CRON_TIME=${CRON_TIME:-*/2 * * * *}
 echo "Using cron time ${CRON_TIME}"
 echo "@reboot root /usr/local/bin/sync.sh >> /var/log/cron.log 2>&1" > /etc/cron.d/git-sync
 echo "${CRON_TIME} root /usr/local/bin/sync.sh >> /var/log/cron.log 2>&1" >> /etc/cron.d/git-sync
